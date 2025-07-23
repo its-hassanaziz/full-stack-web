@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { UserPlus, Key, Users, Trash2 } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import { Admin } from '../../types';
 import LoadingSpinner from '../UI/LoadingSpinner';
+import ConfirmDialog from '../UI/ConfirmDialog';
 import toast from 'react-hot-toast';
 
 interface AddAdminForm {
@@ -19,6 +21,37 @@ interface ResetPasswordForm {
 }
 
 const AdminManagement: React.FC = () => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
+
+  const handleDeleteAdmin = (username: string) => {
+    setAdminToDelete(username);
+    setConfirmOpen(true);
+  };
+
+  const confirmDeleteAdmin = async () => {
+    if (!adminToDelete) return;
+    try {
+      await adminAPI.delete(adminToDelete);
+      toast.success('Admin deleted successfully');
+      fetchAdmins();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete admin');
+    } finally {
+      setConfirmOpen(false);
+      setAdminToDelete(null);
+    }
+  };
+
+  const cancelDeleteAdmin = () => {
+    setConfirmOpen(false);
+    setAdminToDelete(null);
+  };
+  // ...existing code...
+  const [showAddPassword, setShowAddPassword] = useState(false);
+  const [showAddConfirm, setShowAddConfirm] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'add' | 'reset' | 'list'>('add');
@@ -83,6 +116,15 @@ const AdminManagement: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete Admin"
+        message={`Are you sure you want to delete admin '${adminToDelete}'? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteAdmin}
+        onCancel={cancelDeleteAdmin}
+      />
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Admin Management
@@ -144,15 +186,20 @@ const AdminManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Password *
                 </label>
-                <input
-                  type="password"
-                  {...addAdminForm.register('password', { 
-                    required: 'Password is required',
-                    minLength: { value: 6, message: 'Password must be at least 6 characters' }
-                  })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Enter password"
-                />
+                <div className="relative">
+                  <input
+                    type={showAddPassword ? 'text' : 'password'}
+                    {...addAdminForm.register('password', { 
+                      required: 'Password is required',
+                      minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                    })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Enter password"
+                  />
+                  <button type="button" className="absolute right-3 top-3" onClick={() => setShowAddPassword(v => !v)}>
+                    {showAddPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                  </button>
+                </div>
                 {addAdminForm.formState.errors.password && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                     {addAdminForm.formState.errors.password.message}
@@ -164,12 +211,17 @@ const AdminManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirm Password *
                 </label>
-                <input
-                  type="password"
-                  {...addAdminForm.register('confirmPassword', { required: 'Please confirm password' })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Confirm password"
-                />
+                <div className="relative">
+                  <input
+                    type={showAddConfirm ? 'text' : 'password'}
+                    {...addAdminForm.register('confirmPassword', { required: 'Please confirm password' })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Confirm password"
+                  />
+                  <button type="button" className="absolute right-3 top-3" onClick={() => setShowAddConfirm(v => !v)}>
+                    {showAddConfirm ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                  </button>
+                </div>
                 {addAdminForm.formState.errors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                     {addAdminForm.formState.errors.confirmPassword.message}
@@ -228,15 +280,20 @@ const AdminManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   New Password *
                 </label>
-                <input
-                  type="password"
-                  {...resetPasswordForm.register('newPassword', { 
-                    required: 'New password is required',
-                    minLength: { value: 6, message: 'Password must be at least 6 characters' }
-                  })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Enter new password"
-                />
+                <div className="relative">
+                  <input
+                    type={showResetPassword ? 'text' : 'password'}
+                    {...resetPasswordForm.register('newPassword', { 
+                      required: 'New password is required',
+                      minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                    })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Enter new password"
+                  />
+                  <button type="button" className="absolute right-3 top-3" onClick={() => setShowResetPassword(v => !v)}>
+                    {showResetPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                  </button>
+                </div>
                 {resetPasswordForm.formState.errors.newPassword && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                     {resetPasswordForm.formState.errors.newPassword.message}
@@ -248,12 +305,17 @@ const AdminManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirm New Password *
                 </label>
-                <input
-                  type="password"
-                  {...resetPasswordForm.register('confirmPassword', { required: 'Please confirm new password' })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Confirm new password"
-                />
+                <div className="relative">
+                  <input
+                    type={showResetConfirm ? 'text' : 'password'}
+                    {...resetPasswordForm.register('confirmPassword', { required: 'Please confirm new password' })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Confirm new password"
+                  />
+                  <button type="button" className="absolute right-3 top-3" onClick={() => setShowResetConfirm(v => !v)}>
+                    {showResetConfirm ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                  </button>
+                </div>
                 {resetPasswordForm.formState.errors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                     {resetPasswordForm.formState.errors.confirmPassword.message}
@@ -313,6 +375,15 @@ const AdminManagement: React.FC = () => {
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
                           Active
                         </span>
+                        {!admin.undeletable && (
+                          <button
+                            className="ml-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                            title="Delete admin"
+                            onClick={() => handleDeleteAdmin(admin.username)}
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}

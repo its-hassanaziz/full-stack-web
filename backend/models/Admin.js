@@ -27,6 +27,10 @@ const adminSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
+  },
+  undeletable: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

@@ -167,6 +167,25 @@ router.get('/list', auth, async (req, res) => {
 });
 
 // Get current admin info
+// Delete admin (requires admin auth)
+router.delete('/delete/:username', auth, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const admin = await Admin.findOne({ username });
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+    if (admin.undeletable) {
+      return res.status(403).json({ message: 'Cannot delete default admin' });
+    }
+    await Admin.deleteOne({ username });
+    res.json({ message: 'Admin deleted successfully' });
+  } catch (error) {
+    console.error('Delete admin error:', error);
+    res.status(500).json({ message: 'Failed to delete admin' });
+  }
+});
+
 router.get('/me', auth, async (req, res) => {
   res.json(req.admin);
 });

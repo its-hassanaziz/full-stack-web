@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { LogIn, Gamepad2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -13,6 +13,7 @@ interface LoginForm {
 
 const Login: React.FC = () => {
   const { isAuthenticated, login } = useAuth();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -29,6 +30,7 @@ const Login: React.FC = () => {
       const { token, admin } = response.data;
       login(token, admin);
       toast.success('Login successful!');
+      navigate('/admin');
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Login failed');

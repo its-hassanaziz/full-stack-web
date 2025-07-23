@@ -49,7 +49,7 @@ app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use('/api/games', gameRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminRoutes); // This now includes /api/admin/login
 app.use('/api/contact', contactRoutes);
 
 // Health check
@@ -77,16 +77,16 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/modhub', 
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('Connected to MongoDB');
+     // console.log('Connected to MongoDB');
 })
 .catch((error) => {
   console.error('MongoDB connection error:', error);
-  process.exit(1);
+     // process.exit(1);
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+   // console.log(`Server running on port ${PORT}`);
+   // console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

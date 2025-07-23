@@ -43,6 +43,7 @@ export const gameAPI = {
 };
 
 export const adminAPI = {
+  delete: (username: string) => api.delete(`/admin/delete/${username}`),
   login: (username: string, password: string) => 
     api.post('/admin/login', { username, password }),
   register: (username: string, password: string) => 

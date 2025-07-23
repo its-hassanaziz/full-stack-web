@@ -17,6 +17,7 @@ export interface Game {
 }
 
 export interface Admin {
+  undeletable?: boolean;
   _id: string;
   username: string;
   createdAt: string;
